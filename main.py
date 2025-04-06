@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
@@ -13,7 +13,15 @@ sentiment_pipeline = pipeline("sentiment-analysis", model=model, tokenizer=token
 class TextInput(BaseModel):
     text: str
 
+
 @app.post("/analyze")
 def analyze_sentiment(input: TextInput):
+    if not input.text.strip():
+        raise HTTPException(status_code=400, detail="Text input cannot be empty.")
+    
     result = sentiment_pipeline(input.text)
     return {"input": input.text, "result": result}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
